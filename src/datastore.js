@@ -305,6 +305,9 @@ async function createProject(collabId, newProject, auth) {
   if (response.ok) {
     const createdProject = await response.json();
     // add to cache
+    if (!(collabId in cache.projects)) {
+      cache.projects[collabId] = {};
+    }
     cache.projects[collabId][createdProject.id] = createdProject;
     return "success";
   } else {
@@ -326,6 +329,19 @@ async function deleteProject(collabId, projectId, auth) {
   }
 }
 
+function resetCache() {
+  cache = {
+    about: null,
+    jobs: {},
+    collabs: [],
+    projects: {},
+    logs: {},
+    comments: {},
+    tags: {},
+    jobCursor: {},
+  };
+}
+
 export {
   serverInfo,
   listCollabs,
@@ -344,4 +360,5 @@ export {
   createProject,
   deleteProject,
   queryProjects,
+  resetCache,
 };
