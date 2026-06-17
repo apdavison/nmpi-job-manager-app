@@ -6,7 +6,7 @@ import Markdown from "react-markdown";
 
 function Comment(props) {
   return (
-    <Paper key={props.comment_id} sx={{ marginTop: 1 }}>
+    <Paper key={props.id} sx={{ marginTop: 1 }}>
       <Box
         sx={{
           width: "100%",
