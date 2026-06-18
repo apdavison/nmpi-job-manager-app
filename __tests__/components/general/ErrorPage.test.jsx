@@ -1,16 +1,28 @@
-import { describe, test } from "vitest";
-import { render } from "@testing-library/react";
+import { describe, expect, test } from "vitest";
+import { render, screen } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 
 import ErrorPage from "../../../src/components/general/ErrorPage";
 
 describe("ErrorPage", () => {
-  test("placeholder", () => {
+  test("renders the error heading and the error detail", async () => {
     const router = createMemoryRouter(
-      [{ path: "/:collabId/jobs/", element: <ErrorPage />, loader: () => [] }],
-      { initialEntries: ["/foo/"] }
+      [
+        {
+          path: "/",
+          element: <div />,
+          loader: () => {
+            throw new Error("boom");
+          },
+          errorElement: <ErrorPage />,
+        },
+      ],
+      { initialEntries: ["/"] }
     );
 
     render(<RouterProvider router={router} />);
+
+    expect(await screen.findByRole("heading", { name: "Unexpected error" })).toBeDefined();
+    expect(screen.getByText(/Error detail: boom/)).toBeDefined();
   });
 });

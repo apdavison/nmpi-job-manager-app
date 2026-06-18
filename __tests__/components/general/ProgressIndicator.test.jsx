@@ -1,10 +1,11 @@
-import { describe, test } from "vitest";
-import { render } from "@testing-library/react";
+import { describe, expect, test } from "vitest";
+import { render, screen } from "@testing-library/react";
 
 import ProgressIndicator from "../../../src/components/general/ProgressIndicator";
 
 describe("ProgressIndicator", () => {
-  test("placeholder", () => {
+  test("renders a progress indicator", () => {
     render(<ProgressIndicator />);
+    expect(screen.getByRole("progressbar")).toBeDefined();
   });
 });
