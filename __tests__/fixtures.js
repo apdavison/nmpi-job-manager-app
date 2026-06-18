@@ -1,11 +1,8 @@
 // Mock data shaped to match the job-queue-api Pydantic models
 // (see job-queue-api/api/simqueue/data_models.py).
 
-const collabs = [
-  { id: "neuromorphic-testing", title: "Neuromorphic Testing" },
-  { id: "cortical-models", title: "Cortical Column Models" },
-  { id: "spiking-benchmarks", title: "Spiking Network Benchmarks" },
-];
+// GET /collabs/ has response_model=list[str] — a plain list of collab ids
+const collabs = ["neuromorphic-testing", "cortical-models", "spiking-benchmarks"];
 
 // Matches the `Job` model (CompletedJob): id, code, command, collab, input_data,
 // hardware_platform, hardware_config, tags, user_id, status, timestamp_submission,

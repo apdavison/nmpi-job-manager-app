@@ -52,7 +52,7 @@ describe("listCollabs", () => {
   test("returns all collabs", async () => {
     const result = await listCollabs(auth);
     expect(result).toHaveLength(collabs.length);
-    expect(result[0].id).toBe("neuromorphic-testing");
+    expect(result[0]).toBe("neuromorphic-testing");
   });
 
   test("sends authorization header", async () => {
