@@ -16,7 +16,7 @@
     "browser": true,
     "es2020": true
   },
-  "ignorePatterns" :["coverage", "dist"],
+  "ignorePatterns": ["coverage", "dist"],
   "rules": {
     "react/react-in-jsx-scope": "off",
     "react/prop-types": "off"
@@ -25,5 +25,23 @@
     "react": {
       "version": "detect"
     }
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint"],
+      "extends": ["plugin:@typescript-eslint/recommended"],
+      "rules": {
+        "no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+      }
+    },
+    {
+      "files": ["__tests__/**"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    }
+  ]
 }
