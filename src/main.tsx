@@ -6,7 +6,7 @@ import { CssBaseline } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { green } from "@mui/material/colors";
 
-import initAuth from "./auth";
+import initAuth, { checkPermissions } from "./auth";
 import ErrorPage from "./components/general/ErrorPage";
 import { RequestedCollabContext, AuthContext, StatusContext } from "./context";
 
@@ -17,6 +17,7 @@ import JobDetailRoute, { getLoader as jobLoader, actionOnJob } from "./routes/jo
 import { JobCreationRoute, JobEditAndResubmitRoute, submitJob } from "./routes/job-creation";
 import ProjectListRoute, { getLoader as projectListLoader } from "./routes/projects";
 import { updateProject } from "./routes/project-detail";
+import AdminRoute from "./routes/admin";
 import type { Auth } from "./types";
 
 // Define routes
@@ -61,6 +62,11 @@ function getRouter(keycloak: Auth) {
       loader: projectListLoader(keycloak),
       action: updateProject(keycloak),
     },
+    {
+      path: "/admin",
+      element: <AdminRoute />,
+      errorElement: <ErrorPage />,
+    },
   ]);
 }
 
@@ -96,6 +102,10 @@ async function renderApp(auth: Auth) {
   const about = await serverInfo();
   console.log(about);
   const status = about.status;
+
+  // Determine whether the user is a platform administrator before first render, so the
+  // admin section and its toolbar link can be gated on `auth.isAdmin`.
+  await checkPermissions(auth).catch((err) => console.error(err));
 
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>

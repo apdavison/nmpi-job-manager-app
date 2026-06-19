@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { RequestedCollabContext } from "../../context";
+import { AuthContext, RequestedCollabContext } from "../../context";
 
 function renderButtons(page: string, collab?: string): ReactNode {
   switch (page) {
@@ -139,6 +139,7 @@ interface ToolbarProps {
 
 function Toolbar(props: ToolbarProps) {
   const requestedCollabId = useContext(RequestedCollabContext);
+  const auth = useContext(AuthContext);
 
   return (
     <Fragment>
@@ -160,6 +161,17 @@ function Toolbar(props: ToolbarProps) {
           >
             EBRAINS Neuromorphic Computing Service: Job Manager
           </Typography>
+          {auth?.isAdmin && props.page !== "admin" && (
+            <Button
+              color="inherit"
+              variant="outlined"
+              component={RouterLink}
+              to="/admin"
+              sx={{ mr: 1 }}
+            >
+              Admin
+            </Button>
+          )}
           {renderButtons(props.page, props.collab)}
         </MUIToolbar>
       </AppBar>

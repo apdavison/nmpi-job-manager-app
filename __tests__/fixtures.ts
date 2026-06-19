@@ -1,7 +1,7 @@
 // Mock data shaped to match the job-queue-api Pydantic models
 // (see job-queue-api/api/simqueue/data_models.py).
 
-import type { Comment, Job, Project, ServerAbout } from "../src/types";
+import type { Comment, Job, Project, Quota, ServerAbout } from "../src/types";
 
 // GET /collabs/ has response_model=list[str] — a plain list of collab ids
 const collabs: string[] = ["neuromorphic-testing", "cortical-models", "spiking-benchmarks"];
@@ -241,4 +241,61 @@ const serverAbout: ServerAbout = {
   links: { documentation: "/docs" },
 };
 
-export { collabs, jobs, tags, logs, comments, projects, serverAbout };
+// Factories and sample data for the admin section, where projects are presented as
+// "resource requests" across all collabs.
+export function makeQuota(overrides: Partial<Quota> = {}): Quota {
+  return {
+    limit: 1000,
+    usage: 100,
+    platform: "SpiNNaker",
+    units: "core-hours",
+    project: "proj-1",
+    resource_uri: "/projects/proj-1/quotas/q1",
+    ...overrides,
+  };
+}
+
+export function makeResourceRequest(overrides: Partial<Project> = {}): Project {
+  return {
+    id: "proj-1",
+    collab: "collab-1",
+    title: "A test project",
+    status: "under review",
+    abstract: "An abstract describing the project.",
+    description: "A longer description.",
+    owner: "alice@example.com",
+    quotas: [],
+    resource_uri: "/projects/proj-1",
+    submission_date: "2026-01-01",
+    decision_date: null,
+    ...overrides,
+  };
+}
+
+const resourceRequests: Project[] = [
+  makeResourceRequest({
+    title: "Under review project",
+    status: "under review",
+    owner: "alice@example.com",
+    resource_uri: "/projects/proj-1",
+    submission_date: "2026-02-01",
+  }),
+  makeResourceRequest({
+    title: "Accepted project",
+    status: "accepted",
+    owner: "bob@example.com",
+    resource_uri: "/projects/proj-2",
+    submission_date: "2026-01-15",
+    decision_date: "2026-01-16",
+    quotas: [makeQuota({ project: "proj-2", resource_uri: "/projects/proj-2/quotas/q1" })],
+  }),
+  makeResourceRequest({
+    title: "Rejected project",
+    status: "rejected",
+    owner: "carol@example.com",
+    resource_uri: "/projects/proj-3",
+    submission_date: "2026-01-10",
+  }),
+];
+
+export { collabs, jobs, tags, logs, comments, projects, serverAbout, resourceRequests };
