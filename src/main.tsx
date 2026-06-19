@@ -104,8 +104,14 @@ async function renderApp(auth: Auth) {
   const status = about.status;
 
   // Determine whether the user is a platform administrator before first render, so the
-  // admin section and its toolbar link can be gated on `auth.isAdmin`.
-  await checkPermissions(auth).catch((err) => console.error(err));
+  // admin section and its toolbar link can be gated on `auth.isAdmin`. In dev with a dev
+  // token, skip the real userinfo lookup (which would hit the live IAM via the CORS proxy)
+  // and take the admin flag from VITE_DEV_ADMIN instead.
+  if (import.meta.env.DEV && import.meta.env.VITE_DEV_TOKEN) {
+    auth.isAdmin = import.meta.env.VITE_DEV_ADMIN === "true";
+  } else {
+    await checkPermissions(auth).catch((err) => console.error(err));
+  }
 
   ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>

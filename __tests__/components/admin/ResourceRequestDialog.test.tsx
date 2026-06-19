@@ -52,6 +52,17 @@ describe("ResourceRequestDialog", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  // Regression test for the original admin-app bug: with the default "under review"
+  // filter matching nothing, the table passes `filtered[0]` (undefined) to the dialog.
+  // The dialog must render nothing rather than throw on the missing request.
+  it("renders nothing (and does not throw) when no resource request is given", () => {
+    const { container } = render(
+      <ResourceRequestDialog auth={auth} open onClose={vi.fn()} resourceRequest={undefined} />
+    );
+
+    expect(container.firstChild).toBeNull();
+  });
+
   it("does not mutate the resource request when editing the description", () => {
     const rr = makeResourceRequest({ status: "under review", description: "original" });
     render(<ResourceRequestDialog auth={auth} open onClose={vi.fn()} resourceRequest={rr} />);

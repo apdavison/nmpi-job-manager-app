@@ -140,6 +140,7 @@ interface ToolbarProps {
 function Toolbar(props: ToolbarProps) {
   const requestedCollabId = useContext(RequestedCollabContext);
   const auth = useContext(AuthContext);
+  const appName = props.page === "admin" ? "Admin" : "Job Manager";
 
   return (
     <Fragment>
@@ -159,7 +160,7 @@ function Toolbar(props: ToolbarProps) {
             component={RouterLink}
             to={getHomeURL(requestedCollabId)}
           >
-            EBRAINS Neuromorphic Computing Service: Job Manager
+            EBRAINS Neuromorphic Computing Service: {appName}
           </Typography>
           {auth?.isAdmin && props.page !== "admin" && (
             <Button

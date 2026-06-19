@@ -101,16 +101,20 @@ function ResourceRequestTable({ auth }: { auth: Auth }) {
   const [currentResourceRequest, setCurrentResourceRequest] = useState(0);
   const [statusFilter, setStatusFilter] = useState("under review");
   const [searchInput, setSearchInput] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(
     (signal?: AbortSignal) => {
       queryResourceRequests(auth, signal)
         .then((data) => {
           setResourceRequests(data.sort(sortById));
+          setLoading(false);
         })
         .catch((err) => {
           if (err.name !== "AbortError") {
             console.error(err);
+            // Stop showing the spinner even on failure, rather than spinning forever.
+            setLoading(false);
           }
         });
     },
@@ -144,13 +148,15 @@ function ResourceRequestTable({ auth }: { auth: Auth }) {
     return include;
   };
 
-  if (resourceRequests.length === 0) {
+  if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <CircularProgress />
       </Box>
     );
   }
+
+  const visibleRequests = resourceRequests.filter(filterResourceRequests);
 
   return (
     <>
@@ -174,37 +180,43 @@ function ResourceRequestTable({ auth }: { auth: Auth }) {
         />
       </Stack>
 
-      <TableContainer component={Paper} sx={{ marginBottom: 5 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Title</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Abstract</TableCell>
-              <TableCell>Owner</TableCell>
-              <TableCell>Quotas</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {resourceRequests.filter(filterResourceRequests).map((rr, index) => (
-              <TableRow key={rr.resource_uri} onClick={() => handleRowClick(index)}>
-                <TableCell>{rr.title}</TableCell>
-                <TableCell>{rr.status}</TableCell>
-                <TableCell>{rr.abstract}</TableCell>
-                <TableCell>{rr.owner}</TableCell>
-                <TableCell>
-                  <QuotaSummary quotas={rr.quotas} />
-                </TableCell>
+      {visibleRequests.length > 0 ? (
+        <TableContainer component={Paper} sx={{ marginBottom: 5 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Title</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Abstract</TableCell>
+                <TableCell>Owner</TableCell>
+                <TableCell>Quotas</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {visibleRequests.map((rr, index) => (
+                <TableRow key={rr.resource_uri} onClick={() => handleRowClick(index)}>
+                  <TableCell>{rr.title}</TableCell>
+                  <TableCell>{rr.status}</TableCell>
+                  <TableCell>{rr.abstract}</TableCell>
+                  <TableCell>{rr.owner}</TableCell>
+                  <TableCell>
+                    <QuotaSummary quotas={rr.quotas} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      ) : (
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 5 }}>
+          No {statusFilter} resource requests
+        </Typography>
+      )}
 
       <ResourceRequestDialog
         open={dialogOpen}
         onClose={handleClose}
-        resourceRequest={resourceRequests.filter(filterResourceRequests)[currentResourceRequest]}
+        resourceRequest={visibleRequests[currentResourceRequest]}
         auth={auth}
       />
     </>

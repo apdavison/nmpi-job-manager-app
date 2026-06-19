@@ -20,8 +20,8 @@ function AdminRoute() {
       <Toolbar page="admin" />
       <main>
         <Container maxWidth="xl">
-          <Typography variant="h2" sx={{ my: 2 }}>
-            EBRAINS Neuromorphic Platform Admin
+          <Typography variant="h2" sx={{ mt: 4, mb: 2 }}>
+            Resource Requests
           </Typography>
           {auth?.isAdmin ? (
             <ResourceRequestTable auth={auth} />
