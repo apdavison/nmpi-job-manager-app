@@ -1,6 +1,6 @@
 import { jobQueueServer } from "./globals";
 import { isAlmostEmpty, jobIsIncomplete } from "./utils";
-import type { Auth, Comment, Job, Project, ServerAbout } from "./types";
+import type { Auth, Comment, Job, NewQuota, Project, ProjectUpdate, ServerAbout } from "./types";
 
 interface Cache {
   about: ServerAbout | null;
@@ -386,6 +386,50 @@ function resetCache() {
   };
 }
 
+// Admin section: cross-collab queries that bypass the per-collab cache.
+
+// Fetch every project across all collabs (admin view).
+async function queryResourceRequests(auth: Auth, signal?: AbortSignal): Promise<Project[]> {
+  const url = jobQueueServer + "/projects/?size=10000&as_admin=true";
+  const config = getRequestConfig(auth);
+  if (signal) {
+    config.signal = signal;
+  }
+  const response = await fetch(url, config);
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+  return response.json();
+}
+
+// Update a project's status (and optionally its description) as an admin.
+async function updateResourceRequest(
+  project: Project,
+  update: ProjectUpdate,
+  auth: Auth
+): Promise<void> {
+  const url = `${jobQueueServer}${project.resource_uri}?as_admin=true`;
+  const config = getRequestConfig(auth);
+  config.method = "PUT";
+  config.body = JSON.stringify(update);
+  const response = await fetch(url, config);
+  if (!response.ok) {
+    throw new Error(response.statusText);
+  }
+}
+
+// Add a new quota to a project.
+async function addQuota(project: Project, newQuota: NewQuota, auth: Auth): Promise<void> {
+  const url = `${jobQueueServer}${project.resource_uri}/quotas/`;
+  const config = getRequestConfig(auth);
+  config.method = "POST";
+  config.body = JSON.stringify(newQuota);
+  const response = await fetch(url, config);
+  if (response.status !== 201) {
+    throw new Error(response.statusText);
+  }
+}
+
 export {
   serverInfo,
   listCollabs,
@@ -404,5 +448,8 @@ export {
   createProject,
   deleteProject,
   queryProjects,
+  queryResourceRequests,
+  updateResourceRequest,
+  addQuota,
   resetCache,
 };

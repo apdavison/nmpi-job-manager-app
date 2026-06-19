@@ -72,6 +72,24 @@ export interface Project {
   quotas: Quota[];
 }
 
+// A new quota to be added to an existing project (POST .../quotas/), used by the admin
+// section.
+export interface NewQuota {
+  limit: number;
+  platform: string;
+  units: string;
+}
+
+// Fields sent when updating a project's status/description from the admin section
+// (PUT .../{resource_uri}).
+export interface ProjectUpdate {
+  title: string;
+  status: string;
+  abstract: string;
+  owner: string;
+  description?: string;
+}
+
 export interface Comment {
   id: number;
   job_id: number;

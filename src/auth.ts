@@ -1,10 +1,17 @@
 import Keycloak from "keycloak-js";
 import type { KeycloakInitOptions } from "keycloak-js";
 
-import { authServer, authClientId } from "./globals";
+import { authServer, authClientId, authScopes, adminRoles, userInfoUrl } from "./globals";
 import type { Auth } from "./types";
 
 type Main = (auth: Auth) => void;
+
+// Shape of the parts of the EBRAINS userinfo response we rely on.
+interface UserInfo {
+  roles: {
+    team: string[];
+  };
+}
 
 const keycloak = new Keycloak({
   url: `${authServer}/auth`,
@@ -62,7 +69,7 @@ function checkAuth(main: Main) {
     console.log("This is a standalone app...");
     if (isAnonymous) {
       console.log("...which is not authenticated, starting login...");
-      return keycloak.login();
+      return keycloak.login({ scope: authScopes });
     }
     if (isAuthenticated) {
       console.log("...which is authenticated, starting app with authentication");
@@ -91,7 +98,7 @@ function checkAuth(main: Main) {
     console.log("This is a delegate tab...");
     if (isAnonymous) {
       console.log("...which is not authenticated, starting login...");
-      return keycloak.login();
+      return keycloak.login({ scope: authScopes });
     }
     if (isAuthenticated) {
       console.log("...which is authenticated, warn parent and close...");
@@ -115,5 +122,21 @@ function verifyMessage(event: MessageEvent) {
   if (messageOrigin !== myAppOrigin) return;
 
   // Login otherwise
-  return keycloak.login();
+  return keycloak.login({ scope: authScopes });
+}
+
+// Determine whether the authenticated user is a platform administrator by inspecting
+// their EBRAINS team roles, and record the result on the auth object.
+export function checkPermissions(auth: Auth): Promise<void> {
+  const config: RequestInit = {
+    headers: {
+      Authorization: "Bearer " + auth.token,
+    },
+  };
+  return fetch(userInfoUrl, config)
+    .then((response) => response.json())
+    .then((userInfo: UserInfo) => {
+      auth.isAdmin = adminRoles.some((role) => userInfo.roles.team.includes(role));
+      console.log(auth.isAdmin ? "User is an administrator" : "User is not an administrator");
+    });
 }

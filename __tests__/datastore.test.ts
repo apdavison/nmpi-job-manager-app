@@ -18,10 +18,23 @@ import {
   patchProject,
   createProject,
   deleteProject,
+  queryResourceRequests,
+  updateResourceRequest,
+  addQuota,
   resetCache,
 } from "../src/datastore";
 import { installMockServer } from "./mockServer";
-import { collabs, jobs, tags, comments, projects, serverAbout } from "./fixtures";
+import {
+  collabs,
+  jobs,
+  tags,
+  comments,
+  projects,
+  serverAbout,
+  makeResourceRequest,
+  resourceRequests,
+} from "./fixtures";
+import type { NewQuota } from "../src/types";
 
 const auth = { token: "test-token" };
 const testCollab = "neuromorphic-testing";
@@ -294,5 +307,81 @@ describe("deleteProject", () => {
       auth
     );
     expect(result).toBe("success");
+  });
+});
+
+// Admin section: cross-collab queries. Each test registers its own one-time fetch
+// response with mockResponseOnce, which takes precedence over the mock server default.
+describe("admin: resource requests", () => {
+  const lastRequestUrl = (): string => {
+    const calls = fetchMock.mock.calls;
+    return calls[calls.length - 1][0] as string;
+  };
+  const lastRequestInit = (): RequestInit => {
+    const calls = fetchMock.mock.calls;
+    return calls[calls.length - 1][1] as RequestInit;
+  };
+
+  describe("queryResourceRequests", () => {
+    test("requests all projects as admin and returns them", async () => {
+      fetchMock.mockResponseOnce(JSON.stringify(resourceRequests));
+
+      const result = await queryResourceRequests(auth);
+
+      expect(result).toHaveLength(resourceRequests.length);
+      const url = lastRequestUrl();
+      expect(url).toContain("/projects/");
+      expect(url).toContain("as_admin=true");
+      expect(lastRequestInit().headers).toMatchObject({ Authorization: "Bearer test-token" });
+    });
+
+    test("throws when the server responds with an error", async () => {
+      fetchMock.mockResponseOnce("nope", { status: 500, statusText: "Server Error" });
+      await expect(queryResourceRequests(auth)).rejects.toThrow();
+    });
+  });
+
+  describe("updateResourceRequest", () => {
+    test("PUTs the update to the resource uri with as_admin", async () => {
+      fetchMock.mockResponseOnce("", { status: 200 });
+      const rr = makeResourceRequest({ resource_uri: "/projects/proj-1" });
+
+      await updateResourceRequest(
+        rr,
+        { title: rr.title, abstract: rr.abstract, owner: rr.owner, status: "accepted" },
+        auth
+      );
+
+      const url = lastRequestUrl();
+      expect(url).toContain("/projects/proj-1");
+      expect(url).toContain("as_admin=true");
+      const init = lastRequestInit();
+      expect(init.method).toBe("PUT");
+      expect(JSON.parse(init.body as string)).toMatchObject({ status: "accepted" });
+    });
+  });
+
+  describe("addQuota", () => {
+    test("POSTs the new quota to the quotas endpoint", async () => {
+      fetchMock.mockResponseOnce("", { status: 201 });
+      const rr = makeResourceRequest({ resource_uri: "/projects/proj-2" });
+      const newQuota: NewQuota = { platform: "SpiNNaker", limit: 5000, units: "core-hours" };
+
+      await addQuota(rr, newQuota, auth);
+
+      const url = lastRequestUrl();
+      expect(url).toContain("/projects/proj-2/quotas/");
+      const init = lastRequestInit();
+      expect(init.method).toBe("POST");
+      expect(JSON.parse(init.body as string)).toEqual(newQuota);
+    });
+
+    test("throws if the server does not return 201", async () => {
+      fetchMock.mockResponseOnce("", { status: 200 });
+      const rr = makeResourceRequest();
+      await expect(
+        addQuota(rr, { platform: "Demo", limit: 1, units: "hours" }, auth)
+      ).rejects.toThrow();
+    });
   });
 });

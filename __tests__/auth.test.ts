@@ -7,7 +7,8 @@ const { keycloak } = vi.hoisted(() => ({
 }));
 vi.mock("keycloak-js", () => ({ default: vi.fn(() => keycloak) }));
 
-import initAuth from "../src/auth";
+import initAuth, { checkPermissions } from "../src/auth";
+import type { Auth } from "../src/types";
 
 // initAuth does `keycloak.init(config).then(() => checkAuth(main))` and does not return the
 // promise, so tests flush the microtask/timer queue before asserting.
@@ -170,5 +171,41 @@ describe("verifyMessage (the framed-app message listener)", () => {
     listener({ data: "clb.authenticated", origin: "https://evil.example" });
 
     expect(keycloak.login).not.toHaveBeenCalled();
+  });
+});
+
+describe("checkPermissions", () => {
+  beforeEach(() => {
+    fetchMock.resetMocks();
+  });
+
+  test("marks the user as admin when they hold an admin role", async () => {
+    fetchMock.mockResponseOnce(
+      JSON.stringify({ roles: { team: ["collab-neuromorphic-platform-admin-editor"] } })
+    );
+    const auth: Auth = { token: "t" };
+
+    await checkPermissions(auth);
+
+    expect(auth.isAdmin).toBe(true);
+  });
+
+  test("marks the user as non-admin when they hold no admin role", async () => {
+    fetchMock.mockResponseOnce(JSON.stringify({ roles: { team: ["collab-something-else"] } }));
+    const auth: Auth = { token: "t" };
+
+    await checkPermissions(auth);
+
+    expect(auth.isAdmin).toBe(false);
+  });
+
+  test("sends the token in the Authorization header", async () => {
+    fetchMock.mockResponseOnce(JSON.stringify({ roles: { team: [] } }));
+    const auth: Auth = { token: "my-token" };
+
+    await checkPermissions(auth);
+
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
+    expect(init.headers).toMatchObject({ Authorization: "Bearer my-token" });
   });
 });
