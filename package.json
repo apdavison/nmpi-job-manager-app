@@ -1,7 +1,8 @@
 {
   "name": "nmpi-job-manager-app",
   "private": true,
-  "version": "3.0.0.dev",
+  "version": "3.4.0-dev",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
