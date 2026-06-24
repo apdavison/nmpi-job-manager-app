@@ -2,10 +2,15 @@ import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
 
 // auth.js creates a single Keycloak instance at import time. Mock keycloak-js with
 // a hoisted singleton so `new Keycloak(...)` returns an object we can drive and inspect.
+// The implementation must be a `function` (not an arrow) so vitest's spy is constructable.
 const { keycloak } = vi.hoisted(() => ({
   keycloak: { authenticated: false, init: vi.fn().mockResolvedValue(true), login: vi.fn() },
 }));
-vi.mock("keycloak-js", () => ({ default: vi.fn(() => keycloak) }));
+vi.mock("keycloak-js", () => ({
+  default: vi.fn(function () {
+    return keycloak;
+  }),
+}));
 
 import initAuth, { checkPermissions } from "../src/auth";
 import type { Auth } from "../src/types";
