@@ -13,9 +13,10 @@ tracks the SemVer.
 
 ## [Unreleased]
 
-The next release will be **3.4.0**, covering the move to TypeScript, the
-React 19 / MUI 6 toolchain upgrade, and the absorption of the former standalone
-administration app.
+## [3.4.0] — 2026-06-25
+
+This release covers the move to TypeScript, the React 19 / MUI 6 toolchain
+upgrade, and the absorption of the former standalone administration app.
 
 ### Added
 
@@ -104,7 +105,8 @@ Earlier releases — 3.0.0 (`release-2024-01-26`, the React Router
 reimplementation) and the 2.x Create React App series before it — predate this
 changelog and are documented only in `git log`.
 
-[Unreleased]: https://github.com/HumanBrainProject/nmpi-job-manager-app/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/HumanBrainProject/nmpi-job-manager-app/compare/v3.4.0...HEAD
+[3.4.0]: https://github.com/HumanBrainProject/nmpi-job-manager-app/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/HumanBrainProject/nmpi-job-manager-app/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/HumanBrainProject/nmpi-job-manager-app/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/HumanBrainProject/nmpi-job-manager-app/compare/v3.0.0...v3.1.0
